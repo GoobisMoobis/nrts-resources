@@ -1,1 +1,0 @@
-# nrts-resources

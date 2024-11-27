@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tournament Bracket Generator</title>
+    <link rel="stylesheet" href="bracketstyle.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h4>
+        <b>Currently Unfinished</b>
+      </h4>
+      <sub>
+        <b>Known Bugs</b>
+        <ul>
+          <li>Double elim final round</li>
+          <li>Undo button</li>
+          <li>
+            Being able to change a winner even when the next round is started
+          </li>
+          <li>Losers bracket indistinguishable from regular bracket</li>
+        </ul>
+      </sub>
+    </div>
+    <div id="container">
+      <h1>Tournament Bracket Generator</h1>
+
+      <!-- Customization Section -->
+      <div id="settings">
+        <h2>Customize Tournament</h2>
+
+        <label for="numberOfPlayers">Number of Players:</label>
+        <input
+          type="number"
+          id="numberOfPlayers"
+          min="2"
+          step="2"
+          placeholder="Enter 4, 8, 16, etc."
+        />
+        <button onclick="generatePlayerInputs()">Generate Player Inputs</button>
+
+        <div id="playerInputs"></div>
+
+        <h3>Match Type:</h3>
+        <label
+          ><input type="radio" name="matchType" value="single" /> Single
+          Elimination</label
+        >
+        <label
+          ><input type="radio" name="matchType" value="double" /> Double
+          Elimination</label
+        >
+
+        <h3>Order Type:</h3>
+        <label
+          ><input type="radio" name="orderType" value="ordered" />
+          Ordered</label
+        >
+        <label
+          ><input type="radio" name="orderType" value="unordered" />
+          Unordered</label
+        >
+
+        <button onclick="generateBracket()">Create Bracket</button>
+      </div>
+
+      <!-- Bracket Section -->
+      <div id="bracket">
+        <h2>Bracket</h2>
+        <div id="mainBracket"></div>
+        <div id="secondaryBracket"></div>
+        <div id="finalRound"></div>
+        <div class="controls">
+          <button
+            id="nextRoundBtn"
+            class="controlButton"
+            style="display: none"
+            onclick="nextRound()"
+          >
+            Next Round
+          </button>
+          <button
+            id="undoBtn"
+            class="controlButton"
+            style="display: none"
+            onclick="undoLastRound()"
+          >
+            Undo Last Round
+          </button>
+        </div>
+      </div>
+
+      <!-- End Screen -->
+      <div id="endScreen" style="display: none">
+        <h2>Tournament Winner</h2>
+        <p id="winnerName"></p>
+        <button onclick="location.reload()">Start New Tournament</button>
+      </div>
+    </div>
+
+    <script>
+      let currentBracket = [];
+      let loserBracket = [];
+      let pastRounds = [];
+      let pastLoserRounds = [];
+      let finalRoundCreated = false;
+
+      function generatePlayerInputs() {
+        const playerCount = document.getElementById("numberOfPlayers").value;
+        const playerInputsDiv = document.getElementById("playerInputs");
+        playerInputsDiv.innerHTML = "";
+
+        for (let i = 0; i < playerCount; i++) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.placeholder = `Player ${i + 1}`;
+          input.id = `player${i}`;
+          playerInputsDiv.appendChild(input);
+        }
+      }
+
+      function getPlayerNames() {
+        const playerCount = document.getElementById("numberOfPlayers").value;
+        const names = [];
+
+        for (let i = 0; i < playerCount; i++) {
+          const name = document.getElementById(`player${i}`).value;
+          if (name) names.push(name);
+        }
+
+        return names;
+      }
+
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      function generateBracket() {
+        const playerCount = parseInt(
+          document.getElementById("numberOfPlayers").value
+        );
+        const matchType = document.querySelector(
+          'input[name="matchType"]:checked'
+        )?.value;
+        const orderType = document.querySelector(
+          'input[name="orderType"]:checked'
+        )?.value;
+        const playerNames = getPlayerNames();
+
+        if (!matchType || !orderType) {
+          alert("Please select a match type and order type!");
+          return;
+        }
+
+        if (playerNames.length !== playerCount) {
+          alert(
+            "Please ensure the number of player names matches the player count!"
+          );
+          return;
+        }
+
+        let players =
+          orderType === "unordered"
+            ? shuffleArray([...playerNames])
+            : [...playerNames];
+
+        // Reset state
+        currentBracket = players;
+        loserBracket = [];
+        pastRounds = [];
+        pastLoserRounds = [];
+        finalRoundCreated = false;
+        document.getElementById("mainBracket").innerHTML = "";
+        document.getElementById("loserBracket").innerHTML = "";
+        document.getElementById("finalRound").innerHTML = "";
+
+        createRound(players, "mainBracket");
+
+        if (matchType === "double") {
+          createRound(players, "loserBracket");
+        }
+
+        document.getElementById("nextRoundBtn").style.display = "inline-block";
+        document.getElementById("undoBtn").style.display = "inline-block";
+      }
+
+      function createRound(players, bracketId) {
+        const bracketDiv = document.getElementById(bracketId);
+        const roundDiv = document.createElement("div");
+        roundDiv.className = `round round${bracketDiv.children.length + 1}`;
+
+        for (let i = 0; i < players.length; i += 2) {
+          const matchDiv = document.createElement("div");
+          matchDiv.className = "match";
+
+          const player1 = document.createElement("p");
+          player1.textContent = players[i] || "TBD";
+
+          const player2 = document.createElement("p");
+          player2.textContent = players[i + 1] || "TBD";
+
+          const winnerSelect = document.createElement("select");
+          winnerSelect.innerHTML = `
+      <option value="">Select Winner</option>
+      <option value="${players[i]}">${players[i]}</option>
+      <option value="${players[i + 1]}">${players[i + 1]}</option>
+    `;
+          winnerSelect.onchange = checkRoundCompletion;
+
+          matchDiv.appendChild(player1);
+          matchDiv.appendChild(player2);
+          matchDiv.appendChild(winnerSelect);
+          roundDiv.appendChild(matchDiv);
+        }
+
+        bracketDiv.appendChild(roundDiv);
+      }
+
+      function checkRoundCompletion() {
+        const mainBracket = document.getElementById("mainBracket");
+        const loserBracket = document.getElementById("loserBracket");
+        const lastMainRound = mainBracket.lastChild;
+        const lastLoserRound = loserBracket.lastChild;
+
+        const allMainSelected = lastMainRound
+          ? [...lastMainRound.querySelectorAll("select")].every(
+              (select) => select.value
+            )
+          : false;
+        const allLoserSelected = lastLoserRound
+          ? [...lastLoserRound.querySelectorAll("select")].every(
+              (select) => select.value
+            )
+          : false;
+
+        document.getElementById("nextRoundBtn").disabled = !(
+          allMainSelected || allLoserSelected
+        );
+      }
+
+      function lockPreviousRound() {
+        const mainBracket = document.getElementById("mainBracket");
+        const loserBracket = document.getElementById("loserBracket");
+
+        const lastMainRound = mainBracket.lastChild;
+        if (lastMainRound) {
+          [...lastMainRound.querySelectorAll("select")].forEach((select) => {
+            select.disabled = true;
+            select.parentElement.classList.add("completed");
+          });
+        }
+
+        const lastLoserRound = loserBracket.lastChild;
+        if (lastLoserRound) {
+          [...lastLoserRound.querySelectorAll("select")].forEach((select) => {
+            select.disabled = true;
+            select.parentElement.classList.add("completed");
+          });
+        }
+      }
+
+      function nextRound() {
+        lockPreviousRound();
+
+        const mainBracket = document.getElementById("mainBracket");
+        const loserBracket = document.getElementById("loserBracket");
+        const lastMainRound = mainBracket.lastChild;
+        const lastLoserRound = loserBracket.lastChild;
+
+        let mainWinners, loserWinners;
+        if (lastMainRound) {
+          mainWinners = [...lastMainRound.querySelectorAll("select")].map(
+            (select) => select.value
+          );
+          pastRounds.push([...currentBracket]);
+          currentBracket = mainWinners;
+        }
+
+        if (lastLoserRound) {
+          loserWinners = [...lastLoserRound.querySelectorAll("select")].map(
+            (select) => select.value
+          );
+          pastLoserRounds.push([...loserBracket]);
+          loserBracket = [...loserBracket, ...loserWinners];
+        }
+
+        if (currentBracket.length > 1) {
+          createRound(currentBracket, "mainBracket");
+        } else {
+          const loserBracketChampion = loserBracket[0] || "TBD";
+          createFinalMatch(currentBracket[0], loserBracketChampion);
+          if (finalRoundCreated) {
+            displayEndScreen();
+          }
+        }
+
+        if (loserBracket.length >= 2) {
+          createRound(loserBracket, "loserBracket");
+        } else {
+          document.getElementById("loserBracket").innerHTML = "";
+        }
+
+        document.getElementById("nextRoundBtn").disabled = true;
+      }
+
+      function createFinalMatch(winnerBracketChampion, loserBracketChampion) {
+        if (!finalRoundCreated) {
+          const finalDiv = document.getElementById("finalRound");
+          finalDiv.innerHTML = "";
+
+          const title = document.createElement("h3");
+          title.textContent = "Final Match";
+
+          const matchDiv = document.createElement("div");
+          matchDiv.className = "match";
+
+          const player1 = document.createElement("p");
+          player1.textContent = winnerBracketChampion;
+
+          const player2 = document.createElement("p");
+          player2.textContent = loserBracketChampion;
+
+          const winnerSelect = document.createElement("select");
+          winnerSelect.innerHTML = `
+      <option value="">Select Winner</option>
+      <option value="${winnerBracketChampion}">${winnerBracketChampion}</option>
+      <option value="${loserBracketChampion}">${loserBracketChampion}</option>
+    `;
+          winnerSelect.onchange = checkRoundCompletion;
+
+          matchDiv.appendChild(player1);
+          matchDiv.appendChild(player2);
+          matchDiv.appendChild(winnerSelect);
+
+          finalDiv.appendChild(title);
+          finalDiv.appendChild(matchDiv);
+
+          finalRoundCreated = true;
+        }
+      }
+
+      function displayEndScreen() {
+        const winnerName = document.getElementById("winnerName");
+        winnerName.textContent = currentBracket[0];
+        document.getElementById("endScreen").style.display = "block";
+        document.getElementById("bracket").style.display = "none";
+      }
+
+      function undoLastRound() {
+        const mainBracket = document.getElementById("mainBracket");
+        const loserBracket = document.getElementById("loserBracket");
+
+        if (finalRoundCreated) {
+          document.getElementById("finalRound").innerHTML = "";
+          finalRoundCreated = false;
+        } else if (loserBracket.children.length > 0) {
+          loserBracket.removeChild(loserBracket.lastChild);
+          loserBracket = pastLoserRounds.pop() || [];
+        } else if (mainBracket.children.length > 1) {
+          mainBracket.removeChild(mainBracket.lastChild);
+          currentBracket = pastRounds.pop() || [];
+        }
+
+        // Unlock the winner selection for the previous round
+        if (mainBracket.children.length > 0) {
+          const lastMainRound = mainBracket.lastChild;
+          [...lastMainRound.querySelectorAll("select")].forEach((select) => {
+            select.disabled = false;
+            select.parentElement.classList.remove("completed");
+          });
+        }
+
+        if (loserBracket.children.length > 0) {
+          const lastLoserRound = loserBracket.lastChild;
+          [...lastLoserRound.querySelectorAll("select")].forEach((select) => {
+            select.disabled = false;
+            select.parentElement.classList.remove("completed");
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,144 @@
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+#container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #222;
+}
+
+/* Settings Section */
+#settings {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+#settings h2 {
+  margin-top: 0;
+}
+
+#settings label {
+  display: block;
+  margin: 10px 0 5px;
+}
+
+#playerInputs input {
+  display: block;
+  margin-bottom: 5px;
+  padding: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+/* Bracket Section */
+#bracket {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+}
+
+#bracket h2 {
+  margin-top: 0;
+}
+
+.round {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.match {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin: 5px;
+  background-color: #f9f9f9;
+  width: 200px;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+select {
+  padding: 5px;
+  font-size: 14px;
+  width: 100px;
+}
+
+/* Control Buttons */
+.controlButton {
+  display: inline-block;
+  background: #28a745;
+  color: white;
+  padding: 10px 15px;
+  margin-right: 10px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.controlButton:hover {
+  background: #218838;
+}
+
+.controlButton:nth-child(2) {
+  background: #ffc107;
+}
+
+.controlButton:nth-child(2):hover {
+  background: #e0a800;
+}
+
+.container {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-top: 20px;
+  margin-left: 500px;
+  margin-right: 500px;
+  white-space: wrap;
+}
+
+.container h1,
+.container h3,
+.container h4,
+.container h5,
+.container h6 {
+  margin: 0;
+  padding: 0;
+}

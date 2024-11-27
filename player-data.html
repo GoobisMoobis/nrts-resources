@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Player Stats Table</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Player Stats</h1>
+
+    <div class="controls">
+      <label for="sortOptions">Sort by: </label>
+      <select id="sortOptions">
+        <option value="default">ID (Ascending)</option>
+        <option value="idDescending">ID (Descending)</option>
+        <option value="eloAscending">ELO (Ascending)</option>
+        <option value="eloDescending">ELO (Descending)</option>
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table id="playerTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Player Username</th>
+            <th>ELO</th>
+            <th>K Factor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      // Path to your JSON file
+      const dataFile = "player-data.json";
+      let playerData = [];
+
+      // Function to fetch and update the table
+      async function fetchAndUpdateTable(sortType = "default") {
+        try {
+          const response = await fetch(dataFile);
+          if (!response.ok) {
+            throw new Error("Failed to fetch player data");
+          }
+
+          playerData = await response.json();
+          sortTable(sortType); // Sort and populate the table
+        } catch (error) {
+          console.error("Error fetching or updating table:", error);
+        }
+      }
+
+      // Function to populate the table
+      function populateTable(data) {
+        const tableBody = document
+          .getElementById("playerTable")
+          .querySelector("tbody");
+        tableBody.innerHTML = ""; // Clear existing rows
+
+        // Populate table with sorted data
+        data.forEach((player) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+      <td>${player.id}</td>
+      <td>${player.username}</td>
+      <td>${player.elo}</td>
+      <td>${player.kFactor}</td>
+    `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Function to sort data and update the table
+      function sortTable(sortType) {
+        let sortedData = [...playerData];
+
+        switch (sortType) {
+          case "idDescending":
+            sortedData.sort((a, b) => b.id - a.id);
+            break;
+          case "eloAscending":
+            sortedData.sort((a, b) => a.elo - b.elo);
+            break;
+          case "eloDescending":
+            sortedData.sort((a, b) => b.elo - a.elo);
+            break;
+          case "default":
+          default:
+            sortedData.sort((a, b) => a.id - b.id);
+            break;
+        }
+
+        populateTable(sortedData);
+      }
+
+      // Event listener for sort options
+      document
+        .getElementById("sortOptions")
+        .addEventListener("change", (event) => {
+          sortTable(event.target.value);
+        });
+
+      // Initial fetch and table load
+      fetchAndUpdateTable();
+    </script>
+  </body>
+</html>

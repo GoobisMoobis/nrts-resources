@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NRTS ELO Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="calculator">
+      <h2 class="title">Elo Rating Calculator</h2>
+
+      <div class="input-group">
+        <div class="player-section">
+          <h3>Player A</h3>
+          <div class="form-group">
+            <label for="playerAElo">Current Elo Rating</label>
+            <input type="number" id="playerAElo" value="" />
+          </div>
+          <div class="form-group">
+            <label for="playerAK">K Factor</label>
+            <input type="number" id="playerAK" value="64" />
+          </div>
+          <div class="form-group">
+            <label for="playerAResult">Result</label>
+            <select id="playerAResult">
+              <option value="1">Win</option>
+              <option value="0.5">Draw</option>
+              <option value="0">Loss</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="player-section">
+          <h3>Player B</h3>
+          <div class="form-group">
+            <label for="playerBElo">Current Elo Rating</label>
+            <input type="number" id="playerBElo" value="" />
+          </div>
+          <div class="form-group">
+            <label for="playerBK">K Factor</label>
+            <input type="number" id="playerBK" value="64" />
+          </div>
+          <div class="form-group">
+            <label for="playerBResult">Result</label>
+            <select id="playerBResult" disabled>
+              <option value="0">Loss</option>
+              <option value="0.5">Draw</option>
+              <option value="1">Win</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="result-item">
+          <span class="result-label">QA Value:</span>
+          <span class="result-value" id="qaValue">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">QB Value:</span>
+          <span class="result-value" id="qbValue">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Player A Expected Score:</span>
+          <span class="result-value" id="playerAExpected">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Player B Expected Score:</span>
+          <span class="result-value" id="playerBExpected">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">New Player A Rating:</span>
+          <span class="result-value" id="playerANew">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">New Player B Rating:</span>
+          <span class="result-value" id="playerBNew">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Rating Change A:</span>
+          <span class="result-value" id="ratingChangeA">-</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Rating Change B:</span>
+          <span class="result-value" id="ratingChangeB">-</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Get all the input elements
+      const playerAElo = document.getElementById("playerAElo");
+      const playerBElo = document.getElementById("playerBElo");
+      const playerAK = document.getElementById("playerAK");
+      const playerBK = document.getElementById("playerBK");
+      const playerAResult = document.getElementById("playerAResult");
+      const playerBResult = document.getElementById("playerBResult");
+
+      // Get all the output elements
+      const qaValue = document.getElementById("qaValue");
+      const qbValue = document.getElementById("qbValue");
+      const playerAExpected = document.getElementById("playerAExpected");
+      const playerBExpected = document.getElementById("playerBExpected");
+      const playerANew = document.getElementById("playerANew");
+      const playerBNew = document.getElementById("playerBNew");
+      const ratingChangeA = document.getElementById("ratingChangeA");
+      const ratingChangeB = document.getElementById("ratingChangeB");
+
+      // Add event listeners to all inputs
+      [playerAElo, playerBElo, playerAK, playerBK, playerAResult].forEach(
+        (element) => {
+          element.addEventListener("input", calculateElo);
+        }
+      );
+
+      // Sync player B result with player A
+      playerAResult.addEventListener("change", () => {
+        const value = playerAResult.value;
+        playerBResult.value = value === "1" ? "0" : value === "0" ? "1" : "0.5";
+        calculateElo();
+      });
+
+      function calculateElo() {
+        // Get current values
+        const ratingA = parseFloat(playerAElo.value);
+        const ratingB = parseFloat(playerBElo.value);
+        const kFactorA = parseFloat(playerAK.value);
+        const kFactorB = parseFloat(playerBK.value);
+        const resultA = parseFloat(playerAResult.value);
+        const resultB = 1 - resultA;
+
+        // Check if we have all required values
+        if (
+          isNaN(ratingA) ||
+          isNaN(ratingB) ||
+          isNaN(kFactorA) ||
+          isNaN(kFactorB)
+        ) {
+          // Reset display to placeholder if missing values
+          qaValue.textContent = "-";
+          qbValue.textContent = "-";
+          playerAExpected.textContent = "-";
+          playerBExpected.textContent = "-";
+          playerANew.textContent = "-";
+          playerBNew.textContent = "-";
+          ratingChangeA.textContent = "-";
+          ratingChangeB.textContent = "-";
+          return;
+        }
+
+        // Calculate Q values using 480 as divisor
+        const qA = Math.pow(10, ratingA / 480);
+        const qB = Math.pow(10, ratingB / 480);
+
+        // Calculate expected scores
+        const expectedScoreA = qA / (qA + qB);
+        const expectedScoreB = qB / (qA + qB);
+
+        // Calculate new ratings
+        const newRatingA = Math.round(
+          ratingA + kFactorA * (resultA - expectedScoreA)
+        );
+        const newRatingB = Math.round(
+          ratingB + kFactorB * (resultB - expectedScoreB)
+        );
+
+        // Calculate rating changes
+        const changeA = newRatingA - ratingA;
+        const changeB = newRatingB - ratingB;
+
+        // Update display
+        qaValue.textContent = qA.toFixed(4);
+        qbValue.textContent = qB.toFixed(4);
+        playerAExpected.textContent = expectedScoreA.toFixed(4);
+        playerBExpected.textContent = expectedScoreB.toFixed(4);
+        playerANew.textContent = newRatingA;
+        playerBNew.textContent = newRatingB;
+        ratingChangeA.textContent = (changeA >= 0 ? "+" : "") + changeA;
+        ratingChangeB.textContent = (changeB >= 0 ? "+" : "") + changeB;
+      }
+    </script>
+  </body>
+</html>
